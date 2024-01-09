@@ -3,11 +3,35 @@ name: production pipeline
 on:
   push:
     branches:
-      - main
+      - feature/*
 
 jobs:
+  check_for_changes:
+    runs-on: ubuntu-latest
+    container:
+      image: hashicorp/terraform:1.6
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: check if skeleton has changes
+        uses: dorny/paths-filter@v2
+        id: check_changes
+        with:
+          filters: |
+            skeleton:
+              - 'stacks/skeleton/**'
+            app1:
+              - 'stacks/skeleton/**'
+              - 'stacks/infra/app1/**'
+            app2:
+              - 'stacks/skeleton/**'
+              - 'stacks/infra/app2/**'
+
   plan_terraform_skeleton_production:
     runs-on: ubuntu-latest
+    needs: check_for_changes
+    if: steps.check_for_changes.outputs.skeleton == 'true'
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -19,10 +43,7 @@ jobs:
           cd stacks/skeleton/base-networking
           terraform init
           terraform plan -out=base-networking.tfplan
-        with:
-          filters: |
-            skeleton:
-              - 'stacks/skeleton/**'
+
 
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
@@ -34,11 +55,20 @@ jobs:
   apply_terraform_skeleton_production:
     runs-on: ubuntu-latest
     needs: plan_terraform_skeleton_production
+    if: steps.check_for_changes.outputs.skeleton == 'true'
     container:
       image: hashicorp/terraform:1.6
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: check if skeleton has changes
+        uses: dorny/paths-filter@v2
+        id: skeleton_has_changes
+        with:
+          filters: |
+            skeleton:
+              - 'stacks/skeleton/**'
 
       - name: Download a single artifact
         uses: actions/download-artifact@v3
@@ -53,6 +83,7 @@ jobs:
 
   plan_terraform_app1_production:
     runs-on: ubuntu-latest
+    if: steps.check_for_changes.outputs.skeleton == 'true' || steps.check_for_changes.outputs.app1 == 'true'
     needs:
       - plan_terraform_skeleton_production
     container:
@@ -82,6 +113,7 @@ jobs:
 
   apply_terraform_app1_production:
     runs-on: ubuntu-latest
+    if: steps.check_for_changes.outputs.skeleton == 'true' || steps.check_for_changes.outputs.app1 == 'true'
     needs: plan_terraform_app1_production
     container:
       image: hashicorp/terraform:1.6
@@ -102,6 +134,7 @@ jobs:
 
   plan_terraform_app2_production:
     runs-on: ubuntu-latest
+    if: steps.check_for_changes.outputs.skeleton == 'true' || steps.check_for_changes.outputs.app2 == 'true'
     needs:
       - plan_terraform_skeleton_production
     container:
@@ -132,6 +165,7 @@ jobs:
   apply_terraform_app2_production:
     runs-on: ubuntu-latest
     needs: plan_terraform_app2_production
+    if: steps.check_for_changes.outputs.skeleton == 'true' || steps.check_for_changes.outputs.app2 == 'true'
     container:
       image: hashicorp/terraform:1.6
     steps:
