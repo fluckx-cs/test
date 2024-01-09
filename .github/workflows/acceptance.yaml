@@ -1,0 +1,150 @@
+name: acceptance pipeline
+
+on:
+  push:
+    branches:
+      - feature/*
+
+jobs:
+  plan_terraform_skeleton_acceptance:
+    runs-on: ubuntu-latest
+    container:
+      image: hashicorp/terraform:1.6
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: plan skeleton
+        run: |
+          cd stacks/skeleton/base-networking
+          terraform init
+          terraform plan -out=base-networking.tfplan
+        with:
+          filters: |
+            skeleton:
+              - 'stacks/skeleton/**'
+
+      - name: Save Terraform plan as artifact file
+        uses: actions/upload-artifact@v3
+        with:
+          name: plan-files-skeleton
+          path: |
+            stacks/skeleton/**/*tfplan
+
+  apply_terraform_skeleton_acceptance:
+    runs-on: ubuntu-latest
+    needs: plan_terraform_skeleton_acceptance
+    container:
+      image: hashicorp/terraform:1.6
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download a single artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: plan-files-skeleton
+
+      - name: apply everything
+        run: |
+          cd stacks/skeleton/base-networking
+          terraform init
+          terraform apply -auto-approve base-networking.tfplan
+
+  plan_terraform_app1_acceptance:
+    runs-on: ubuntu-latest
+    needs:
+      - plan_terraform_skeleton_acceptance
+    container:
+      image: hashicorp/terraform:1.6
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: plan skeleton
+        run: |
+          cd stacks/infra/app1
+          echo "Running plan in app1"
+          terraform init
+          terraform plan -out=app1.tfplan
+        with:
+          filters: |
+            skeleton:
+              - 'stacks/skeleton/**'
+              - 'stacks/app1/**'
+
+      - name: Save Terraform plan as artifact file
+        uses: actions/upload-artifact@v3
+        with:
+          name: plan-files-app1
+          path: |
+            stacks/app1/*tfplan
+
+  apply_terraform_app1_acceptance:
+    runs-on: ubuntu-latest
+    needs: plan_terraform_app1_acceptance
+    container:
+      image: hashicorp/terraform:1.6
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download a single artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: plan-files-app1
+
+      - name: apply everything
+        run: |
+          cd stacks/infra/app1
+          echo "Running apply in app1"
+          stat app1.tfplan
+
+  plan_terraform_app2_acceptance:
+    runs-on: ubuntu-latest
+    needs:
+      - plan_terraform_skeleton_acceptance
+    container:
+      image: hashicorp/terraform:1.6
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: plan skeleton
+        run: |
+          cd stacks/infra/app2
+          echo "Running plan in app2"
+          terraform init
+          terraform plan -out=app2.tfplan
+        with:
+          filters: |
+            skeleton:
+              - 'stacks/skeleton/**'
+              - 'stacks/app2/**'
+
+      - name: Save Terraform plan as artifact file
+        uses: actions/upload-artifact@v3
+        with:
+          name: plan-files-app2
+          path: |
+            stacks/app2/*tfplan
+
+  apply_terraform_app2_acceptance:
+    runs-on: ubuntu-latest
+    needs: plan_terraform_app2_acceptance
+    container:
+      image: hashicorp/terraform:1.6
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download a single artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: plan-files-app2
+
+      - name: apply everything
+        run: |
+          cd stacks/infra/app2
+          echo "Running apply in app2"
+          stat app2.tfplan

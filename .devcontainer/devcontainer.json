@@ -7,9 +7,9 @@
     },
     "ghcr.io/devcontainers/features/aws-cli:1": {},
     "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/python:1": {}
+    "ghcr.io/devcontainers/features/python:1": {},
   },
   "mounts": [
-    "source=${env:HOME}${env:USERPROFILE}/.aws,target=/root/.aws,type=bind"
+    "source=${env:HOME}${env:USERPROFILE}/.aws,target=/vscode/.aws,type=bind"
   ]
 }
