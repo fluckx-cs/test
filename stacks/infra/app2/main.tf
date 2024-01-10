@@ -29,5 +29,3 @@ output "file_content" {
 output "uuid" {
   value = local.uuid
 }
-
-

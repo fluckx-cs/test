@@ -199,7 +199,7 @@ jobs:
         with:
           name: plan-files-app1-acceptance
 
-      - name: plan app1
+      - name: apply app1
         run: |
           terraform -chdir=stacks/infra/app1 init
           terraform -chdir=stacks/infra/app1 apply -var-file=production.tfvars app1-acceptance.tfplan
@@ -248,8 +248,9 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: plan-files-app2-acceptance
+          rename: stacks/app2/app2-acceptance.tfplan
 
-      - name: plan app1
+      - name: apply app2
         run: |
           terraform -chdir=stacks/infra/app2 init
           terraform -chdir=stacks/infra/app2 apply  -var-file=acceptance.tfvars app2-acceptance.tfplan
@@ -298,7 +299,7 @@ jobs:
         with:
           name: plan-files-app1-production
 
-      - name: plan app1
+      - name: apply app1
         run: |
           terraform -chdir=stacks/infra/app1 init
           terraform -chdir=stacks/infra/app1 apply -var-file=production.tfvars app1-production.tfplan
@@ -347,8 +348,9 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: plan-files-app2-production
+          rename: stacks/app2/app2-production.tfplan
 
-      - name: plan app2
+      - name: apply app2
         run: |
           terraform -chdir=stacks/infra/app2 init
           terraform -chdir=stacks/infra/app2 apply -var-file=production.tfvars app2-production.tfplan
