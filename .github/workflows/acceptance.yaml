@@ -8,12 +8,12 @@ on:
 jobs:
   check_for_changes:
     outputs:
-      skeleton_acc_changed: ${{ steps.check_changes.outputs.skeleton_acceptance }}"
-      app1_acc_changed: ${{ steps.check_changes.outputs.app1_acceptance || steps.check_changes.outputs.skeleton_acceptance }}"
-      app2_acc_changed: ${{ steps.check_changes.outputs.app2_acceptance || steps.check_changes.outputs.skeleton_acceptance }}"
-      skeleton_prd_changed: ${{ steps.check_changes.outputs.skeleton_production }}"
-      app1_prd_changed: ${{ steps.check_changes.outputs.app1_production || steps.check_changes.outputs.skeleton_production }}"
-      app2_prd_changed: ${{ steps.check_changes.outputs.app2_production || steps.check_changes.outputs.skeleton_production }}"
+      skeleton_acc_changed: ${{ steps.check_changes.outputs.skeleton_acceptance }}
+      app1_acc_changed:     ${{ steps.check_changes.outputs.app1_acceptance }}
+      app2_acc_changed:     ${{ steps.check_changes.outputs.app2_acceptance }}
+      skeleton_prd_changed: ${{ steps.check_changes.outputs.skeleton_production }}
+      app1_prd_changed:     ${{ steps.check_changes.outputs.app1_production }}
+      app2_prd_changed:     ${{ steps.check_changes.outputs.app2_production }}
     runs-on: ubuntu-latest
     container:
       image: hashicorp/terraform:1.6
@@ -24,44 +24,42 @@ jobs:
         run: |
           git config --global --add safe.directory $(pwd)
 
-      - name: check if skeleton has changes
+      - name: check for changes in stacks
         uses: dorny/paths-filter@v2
         id: check_changes
         with:
           filters: |
-            skeleton_acceptance:
-              - './stacks/skeleton/**'
-              - '!./stacks/skeleton/**/*tfvars'
+            skeleton_acceptance: &skeleton_acceptance
+              - './stacks/skeleton/**/*tf'
               - './stacks/skeleton/**/acceptance.tfvars'
-            skeleton_production:
-              - './stacks/skeleton/**'
-              - '!./stacks/skeleton/**/*tfvars'
+            skeleton_production: &skeleton_production
+              - './stacks/skeleton/**/*tf'
               - './stacks/skeleton/**/production.tfvars'
             app1_acceptance:
-              - './stacks/infra/app1/**'
-              - '!./stacks/infra/app1/*tfvars'
+              - *skeleton_acceptance
+              - './stacks/infra/app1/*tf'
               - './stacks/infra/app1/acceptance.tfvars'
             app1_production:
-              - './stacks/infra/app1/**'
-              - '!./stacks/infra/app1/*tfvars'
+              - *skeleton_acceptance
+              - './stacks/infra/app1/*tf'
               - './stacks/infra/app1/production.tfvars'
             app2_acceptance:
-              - './stacks/infra/app2/**'
-              - '!./stacks/infra/app2/*tfvars'
+              - *skeleton_acceptance
+              - './stacks/infra/app2/*tf'
               - './stacks/infra/app2/acceptance.tfvars'
             app2_production:
-              - './stacks/infra/app2/**'
-              - '!./stacks/infra/app2/*tfvars'
+              - *skeleton_production
+              - './stacks/infra/app2/*tf'
               - './stacks/infra/app2/production.tfvars'
 
       - name: output checks
         run: |
           echo "run skeleton acc: ${{ steps.check_changes.outputs.skeleton_acceptance }}"
-          echo "run app1 acc:     ${{ steps.check_changes.outputs.app1_acceptance || steps.check_changes.outputs.skeleton_acceptance }}"
-          echo "run app2 acc:     ${{ steps.check_changes.outputs.app2_acceptance || steps.check_changes.outputs.skeleton_acceptance }}"
+          echo "run app1 acc:     ${{ steps.check_changes.outputs.app1_acceptance }}"
+          echo "run app2 acc:     ${{ steps.check_changes.outputs.app2_acceptance }}"
           echo "run skeleton prd: ${{ steps.check_changes.outputs.skeleton_production }}"
-          echo "run app1 prd:     ${{ steps.check_changes.outputs.app1_production || steps.check_changes.outputs.skeleton_production }}"
-          echo "run app2 prd:     ${{ steps.check_changes.outputs.app2_production || steps.check_changes.outputs.skeleton_production }}"
+          echo "run app1 prd:     ${{ steps.check_changes.outputs.app1_production }}"
+          echo "run app2 prd:     ${{ steps.check_changes.outputs.app2_production }}"
         
 
   plan_terraform_skeleton_acceptance:
@@ -76,9 +74,30 @@ jobs:
 
       - name: plan skeleton
         run: |
-          cd stacks/skeleton/base-networking
-          terraform init
-          terraform plan -out=base-networking.tfplan
+          terraform -chdir=stacks/skeleton/base-networking init
+          terraform -chdir=stacks/skeleton/base-networking plan -out=base-networking.tfplan -var-file=acceptance.tfvars
+
+      - name: Save Terraform plan as artifact file
+        uses: actions/upload-artifact@v3
+        with:
+          name: plan-files-skeleton
+          path: |
+            stacks/skeleton/**/*tfplan
+
+  plan_terraform_skeleton_production:
+    runs-on: ubuntu-latest
+    needs: check_for_changes
+    if: ${{ always() && needs.check_for_changes.outputs.skeleton_prd_changed == 'true' }}
+    container:
+      image: hashicorp/terraform:1.6
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: plan skeleton
+        run: |
+          terraform -chdir=stacks/skeleton/base-networking init
+          terraform -chdir=stacks/skeleton/base-networking plan -out=base-networking.tfplan -var-file=production.tfvars
 
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
@@ -103,8 +122,8 @@ jobs:
         run: |
           cd stacks/infra/app1
           echo "Running plan in app1"
-          terraform init
-          terraform plan -out=app1.tfplan
+          terraform -chdir=stacks/infra/app1 init
+          terraform -chdir=stacks/infra/app plan -out=app1-acceptance.tfplan -var-file=acceptance.tfvars
 
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
@@ -127,29 +146,63 @@ jobs:
 
       - name: plan skeleton
         run: |
-          cd stacks/infra/app2
           echo "Running plan in app2"
-          terraform init
-          terraform plan -out=app2.tfplan
+          terraform -chdir=stacks/infra/app2 init
+          terraform -chdir=stacks/infra/app2 plan -out=app2-acceptance.tfplan -var-file=acceptance.tfvars
 
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
         with:
           name: plan-files-app2
           path: |
-            stacks/app2/*tfplan
+            stacks/app2/app2.tfplan
 
-  debug_results:
+  plan_terraform_app1_production:
     runs-on: ubuntu-latest
-    if: ${{ always() }}
+    if: ${{ always() && needs.check_for_changes.outputs.app1_prd_changed == 'true' }}
     needs:
       - check_for_changes
+      - plan_terraform_skeleton_production
+    container:
+      image: hashicorp/terraform:1.6
     steps:
-      - name: check variables
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: plan skeleton
         run: |
-          echo " skeleton acc: ${{ needs.check_for_changes.outputs.skeleton_acc_changed }}"
-          echo " app1 acc:     ${{ needs.check_for_changes.outputs.app1_acc_changed }}"
-          echo " app2 acc:     ${{ needs.check_for_changes.outputs.app2_acc_changed }}"
-          echo " skeleton prd: ${{ needs.check_for_changes.outputs.skeleton_prd_changed }}"
-          echo " app1 prd:     ${{ needs.check_for_changes.outputs.app1_prd_changed }}"
-          echo " app2 prd:     ${{ needs.check_for_changes.outputs.app2_prd_changed }}"
+          echo "Running plan in app1"
+          terraform -chdir=stacks/infra/app1 init
+          terraform -chdir=stacks/infra/app1 plan -out=app1-production.tfplan -var-file=production.tfvars
+
+      - name: Save Terraform plan as artifact file
+        uses: actions/upload-artifact@v3
+        with:
+          name: plan-files-app1
+          path: |
+            stacks/app1/*tfplan
+
+  plan_terraform_app2_production:
+    runs-on: ubuntu-latest
+    if: ${{ always() && needs.check_for_changes.outputs.app2_prd_changed == 'true' }}
+    needs:
+      - check_for_changes
+      - plan_terraform_skeleton_production
+    container:
+      image: hashicorp/terraform:1.6
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: plan skeleton
+        run: |
+          echo "Running plan in app2"
+          terraform -chdir=stacks/infra/app2 init
+          terraform -chdir=stacks/infra/app2 plan -out=app2.tfplan -var-file=production.tfvars
+
+      - name: Save Terraform plan as artifact file
+        uses: actions/upload-artifact@v3
+        with:
+          name: plan-files-app2
+          path: |
+            stacks/app2/app2-production.tfplan
