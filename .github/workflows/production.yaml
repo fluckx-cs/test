@@ -106,7 +106,7 @@ jobs:
       - name: plan skeleton
         run: |
           terraform -chdir=stacks/skeleton/base-networking init
-          terraform -chdir=stacks/skeleton/base-networking apply base-networking.tfplan -var-file=acceptance.tfvars
+          terraform -chdir=stacks/skeleton/base-networking apply -var-file=acceptance.tfvars base-networking.tfplan
 
   plan_terraform_skeleton_production:
     runs-on: ubuntu-latest
@@ -152,7 +152,7 @@ jobs:
       - name: plan skeleton
         run: |
           terraform -chdir=stacks/skeleton/base-networking init
-          terraform -chdir=stacks/skeleton/base-networking apply base-networking.tfplan -var-file=production.tfvars
+          terraform -chdir=stacks/skeleton/base-networking apply  -var-file=production.tfvars base-networking.tfplan
 
 
   plan_terraform_app1_acceptance:
@@ -202,7 +202,7 @@ jobs:
       - name: plan app1
         run: |
           terraform -chdir=stacks/infra/app1 init
-          terraform -chdir=stacks/infra/app1 apply app1-acceptance.tfplan -var-file=acceptance.tfvars
+          terraform -chdir=stacks/infra/app1 apply -var-file=production.tfvars app1-acceptance.tfplan
 
 
   plan_terraform_app2_acceptance:
@@ -211,7 +211,7 @@ jobs:
     if: ${{ always() && needs.check_for_changes.outputs.app2_acc_changed == 'true' }}
     needs:
       - check_for_changes
-      - plan_terraform_skeleton_acceptance
+      - apply_terraform_skeleton_acceptance
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -252,7 +252,7 @@ jobs:
       - name: plan app1
         run: |
           terraform -chdir=stacks/infra/app2 init
-          terraform -chdir=stacks/infra/app2 apply app2-acceptance.tfplan -var-file=acceptance.tfvars
+          terraform -chdir=stacks/infra/app2 apply  -var-file=acceptance.tfvars app2-acceptance.tfplan
 
   plan_terraform_app1_production:
     runs-on: ubuntu-latest
@@ -260,7 +260,7 @@ jobs:
     if: ${{ always() && needs.check_for_changes.outputs.app1_prd_changed == 'true' }}
     needs:
       - check_for_changes
-      - plan_terraform_skeleton_production
+      - apply_terraform_skeleton_production
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -301,7 +301,7 @@ jobs:
       - name: plan app1
         run: |
           terraform -chdir=stacks/infra/app1 init
-          terraform -chdir=stacks/infra/app1 apply app1-production.tfplan -var-file=production.tfvars
+          terraform -chdir=stacks/infra/app1 apply -var-file=production.tfvars app1-production.tfplan
 
   plan_terraform_app2_production:
     runs-on: ubuntu-latest
@@ -309,7 +309,7 @@ jobs:
     if: ${{ always() && needs.check_for_changes.outputs.app2_prd_changed == 'true' }}
     needs:
       - check_for_changes
-      - plan_terraform_skeleton_production
+      - apply_terraform_skeleton_production
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -351,4 +351,4 @@ jobs:
       - name: plan app2
         run: |
           terraform -chdir=stacks/infra/app2 init
-          terraform -chdir=stacks/infra/app2 apply app2-production.tfplan -var-file=production.tfvars
+          terraform -chdir=stacks/infra/app2 apply -var-file=production.tfvars app2-production.tfplan
