@@ -28,9 +28,13 @@ jobs:
           filters: |
             skeleton:
               - 'stacks/skeleton/**'
+              - 'stacks/skeleton/**/*tfvars
+            skeleton_acceptance:
+              - 'stacks/skeleton/**/acceptance.tfvars'
             app1:
               - 'stacks/skeleton/**'
               - 'stacks/infra/app1/**'
+            app1_acceptance:
             app2:
               - 'stacks/skeleton/**'
               - 'stacks/infra/app2/**'
@@ -38,7 +42,7 @@ jobs:
   plan_terraform_skeleton_production:
     runs-on: ubuntu-latest
     needs: check_for_changes
-    if: needs.check_for_changes.outputs.skeleton_changed == 'true'
+    if: ${{ always() && needs.check_for_changes.outputs.skeleton_changed == 'true' }}
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -61,7 +65,7 @@ jobs:
   apply_terraform_skeleton_production:
     runs-on: ubuntu-latest
     needs: plan_terraform_skeleton_production
-    if: needs.check_for_changes.outputs.skeleton_changed == 'true'
+    if: ${{ always() && needs.check_for_changes.outputs.skeleton_changed == 'true' }}
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -81,7 +85,7 @@ jobs:
 
   plan_terraform_app1_production:
     runs-on: ubuntu-latest
-    if: needs.check_for_changes.outputs.app1_changed == 'true'
+    if: ${{ always() && needs.check_for_changes.outputs.app1_changed == 'true' }}
     needs:
       - check_for_changes
       - apply_terraform_skeleton_production
@@ -107,7 +111,7 @@ jobs:
 
   apply_terraform_app1_production:
     runs-on: ubuntu-latest
-    if: needs.check_for_changes.outputs.app1_changed == 'true'
+    if: ${{ always() && needs.check_for_changes.outputs.app1_changed == 'true' }}
     needs: plan_terraform_app1_production
     container:
       image: hashicorp/terraform:1.6

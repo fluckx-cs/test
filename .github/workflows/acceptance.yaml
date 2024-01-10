@@ -8,9 +8,12 @@ on:
 jobs:
   check_for_changes:
     outputs:
-      skeleton_changed: ${{ steps.check_changes.outputs.skeleton }}
-      app1_changed: ${{ steps.check_changes.outputs.app1 }}
-      app2_changed: ${{ steps.check_changes.outputs.app2 }}
+      skeleton_acc_changed: ${{ steps.check_changes.outputs.skeleton_acceptance }}"
+      app1_acc_changed: ${{ steps.check_changes.outputs.app1_acceptance || steps.check_changes.outputs.skeleton_acceptance }}"
+      app2_acc_changed: ${{ steps.check_changes.outputs.app2_acceptance || steps.check_changes.outputs.skeleton_acceptance }}"
+      skeleton_prd_changed: ${{ steps.check_changes.outputs.skeleton_production }}"
+      app1_prd_changed: ${{ steps.check_changes.outputs.app1_production || steps.check_changes.outputs.skeleton_production }}"
+      app2_prd_changed: ${{ steps.check_changes.outputs.app2_production || steps.check_changes.outputs.skeleton_production }}"
     runs-on: ubuntu-latest
     container:
       image: hashicorp/terraform:1.6
@@ -26,25 +29,45 @@ jobs:
         id: check_changes
         with:
           filters: |
-            skeleton:
+            skeleton_acceptance:
               - 'stacks/skeleton/**'
-            app1:
+              - '!stacks/skeleton/**/*tfvars'
+              - 'stacks/skeleton/**/acceptance.tfvars'
+            skeleton_production:
               - 'stacks/skeleton/**'
+              - '!stacks/skeleton/**/*tfvars'
+              - 'stacks/skeleton/**/production.tfvars'
+            app1_acceptance:
               - 'stacks/infra/app1/**'
-            app2:
-              - 'stacks/skeleton/**'
+              - '!stacks/infra/app1/*tfvars'
+              - 'stacks/infra/app1/acceptance.tfvars'
+            app1_production:
+              - 'stacks/infra/app1/**'
+              - '!stacks/infra/app1/*tfvars'
+              - 'stacks/infra/app1/production.tfvars'
+            app2_acceptance:
               - 'stacks/infra/app2/**'
+              - '!stacks/infra/app2/*tfvars'
+              - 'stacks/infra/app2/acceptance.tfvars'
+            app2_production:
+              - 'stacks/infra/app2/**'
+              - '!stacks/infra/app2/*tfvars'
+              - 'stacks/infra/app2/production.tfvars'
+
       - name: output checks
         run: |
-          echo "skeleton changed: ${{ steps.check_changes.outputs.skeleton }}"
-          echo "app1 changed:     ${{ steps.check_changes.outputs.app1 }}"
-          echo "app2 changed:     ${{ steps.check_changes.outputs.app2 }}"
+          echo "run skeleton acc: ${{ steps.check_changes.outputs.skeleton_acceptance }}"
+          echo "run app1 acc:     ${{ steps.check_changes.outputs.app1_acceptance || steps.check_changes.outputs.skeleton_acceptance }}"
+          echo "run app2 acc:     ${{ steps.check_changes.outputs.app2_acceptance || steps.check_changes.outputs.skeleton_acceptance }}"
+          echo "run skeleton prd: ${{ steps.check_changes.outputs.skeleton_production }}"
+          echo "run app1 prd:     ${{ steps.check_changes.outputs.app1_production || steps.check_changes.outputs.skeleton_production }}"
+          echo "run app2 prd:     ${{ steps.check_changes.outputs.app2_production || steps.check_changes.outputs.skeleton_production }}"
         
 
   plan_terraform_skeleton_acceptance:
     runs-on: ubuntu-latest
     needs: check_for_changes
-    if: ${{ needs.check_for_changes.outputs.skeleton_changed == 'true' }}
+    if: ${{ always() && needs.check_for_changes.outputs.skeleton_acc_changed == 'true' }}
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -66,7 +89,7 @@ jobs:
 
   plan_terraform_app1_acceptance:
     runs-on: ubuntu-latest
-    if: ${{ needs.check_for_changes.outputs.app1_changed == 'true' }}
+    if: ${{ always() && needs.check_for_changes.outputs.app1_acc_changed == 'true' }}
     needs:
       - check_for_changes
       - plan_terraform_skeleton_acceptance
@@ -92,7 +115,7 @@ jobs:
 
   plan_terraform_app2_acceptance:
     runs-on: ubuntu-latest
-    if: ${{ always() && needs.check_for_changes.outputs.app2_changed == 'true' }}
+    if: ${{ always() && needs.check_for_changes.outputs.app2_acc_changed == 'true' }}
     needs:
       - check_for_changes
       - plan_terraform_skeleton_acceptance
@@ -115,18 +138,3 @@ jobs:
           name: plan-files-app2
           path: |
             stacks/app2/*tfplan
-
-  last_test:
-    runs-on: ubuntu-latest
-    if: always()
-    needs:
-      - check_for_changes
-    steps:
-      - name: viewing results
-        run: |
-          echo skeleton: ${{ needs.check_for_changes.outputs.skeleton_changed }}
-          echo skeleton: ${{ needs.check_for_changes.outputs.skeleton_changed == 'true' }}
-          echo app1: ${{ needs.check_for_changes.outputs.app1_changed }}
-          echo app1: ${{ needs.check_for_changes.outputs.app1_changed == 'true' }}
-          echo app2: ${{ needs.check_for_changes.outputs.app2_changed }}
-          echo app2: ${{ needs.check_for_changes.outputs.app2_changed == 'true' }}
