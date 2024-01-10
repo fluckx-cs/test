@@ -80,7 +80,7 @@ jobs:
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
         with:
-          name: plan-files-skeleton
+          name: plan-files-skeleton-acceptance
           path: |
             stacks/skeleton/**/*tfplan
 
@@ -102,7 +102,7 @@ jobs:
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
         with:
-          name: plan-files-skeleton
+          name: plan-files-skeleton-production
           path: |
             stacks/skeleton/**/*tfplan
 
@@ -127,7 +127,7 @@ jobs:
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
         with:
-          name: plan-files-app1
+          name: plan-files-app1-acceptance
           path: |
             stacks/infra/app1/*tfplan
 
@@ -152,7 +152,7 @@ jobs:
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
         with:
-          name: plan-files-app2
+          name: plan-files-app2-acceptance
           path: |
             stacks/infra/app2/app2-acceptance.tfplan
 
@@ -177,7 +177,7 @@ jobs:
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
         with:
-          name: plan-files-app1
+          name: plan-files-app1-production
           path: |
             stacks/infra/app1/*tfplan
 
@@ -202,6 +202,6 @@ jobs:
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
         with:
-          name: plan-files-app2
+          name: plan-files-app2-production
           path: |
             stacks/infra/app2/app2-production.tfplan
