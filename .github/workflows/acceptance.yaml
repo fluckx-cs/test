@@ -122,7 +122,7 @@ jobs:
         run: |
           echo "Running plan in app1"
           terraform -chdir=stacks/infra/app1 init
-          terraform -chdir=stacks/infra/app plan -out=app1-acceptance.tfplan -var-file=acceptance.tfvars
+          terraform -chdir=stacks/infra/app1 plan -out=app1-acceptance.tfplan -var-file=acceptance.tfvars
 
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
