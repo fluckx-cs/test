@@ -30,29 +30,29 @@ jobs:
         with:
           filters: |
             skeleton_acceptance:
-              - 'stacks/skeleton/**'
-              - '!stacks/skeleton/**/*tfvars'
-              - 'stacks/skeleton/**/acceptance.tfvars'
+              - './stacks/skeleton/**'
+              - '!./stacks/skeleton/**/*tfvars'
+              - './stacks/skeleton/**/acceptance.tfvars'
             skeleton_production:
-              - 'stacks/skeleton/**'
-              - '!stacks/skeleton/**/*tfvars'
-              - 'stacks/skeleton/**/production.tfvars'
+              - './stacks/skeleton/**'
+              - '!./stacks/skeleton/**/*tfvars'
+              - './stacks/skeleton/**/production.tfvars'
             app1_acceptance:
-              - 'stacks/infra/app1/**'
-              - '!stacks/infra/app1/*tfvars'
-              - 'stacks/infra/app1/acceptance.tfvars'
+              - './stacks/infra/app1/**'
+              - '!./stacks/infra/app1/*tfvars'
+              - './stacks/infra/app1/acceptance.tfvars'
             app1_production:
-              - 'stacks/infra/app1/**'
-              - '!stacks/infra/app1/*tfvars'
-              - 'stacks/infra/app1/production.tfvars'
+              - './stacks/infra/app1/**'
+              - '!./stacks/infra/app1/*tfvars'
+              - './stacks/infra/app1/production.tfvars'
             app2_acceptance:
-              - 'stacks/infra/app2/**'
-              - '!stacks/infra/app2/*tfvars'
-              - 'stacks/infra/app2/acceptance.tfvars'
+              - './stacks/infra/app2/**'
+              - '!./stacks/infra/app2/*tfvars'
+              - './stacks/infra/app2/acceptance.tfvars'
             app2_production:
-              - 'stacks/infra/app2/**'
-              - '!stacks/infra/app2/*tfvars'
-              - 'stacks/infra/app2/production.tfvars'
+              - './stacks/infra/app2/**'
+              - '!./stacks/infra/app2/*tfvars'
+              - './stacks/infra/app2/production.tfvars'
 
       - name: output checks
         run: |
@@ -138,3 +138,18 @@ jobs:
           name: plan-files-app2
           path: |
             stacks/app2/*tfplan
+
+  debug_results:
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs:
+      - check_for_changes
+    steps:
+      - name: check variables
+        run: |
+          echo " skeleton acc: ${{ needs.check_for_changes.outputs.skeleton_acc_changed }}"
+          echo " app1 acc:     ${{ needs.check_for_changes.outputs.app1_acc_changed }}"
+          echo " app2 acc:     ${{ needs.check_for_changes.outputs.app2_acc_changed }}"
+          echo " skeleton prd: ${{ needs.check_for_changes.outputs.skeleton_prd_changed }}"
+          echo " app1 prd:     ${{ needs.check_for_changes.outputs.app1_prd_changed }}"
+          echo " app2 prd:     ${{ needs.check_for_changes.outputs.app2_prd_changed }}"
