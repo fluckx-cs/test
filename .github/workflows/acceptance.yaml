@@ -120,7 +120,6 @@ jobs:
 
       - name: plan skeleton
         run: |
-          cd stacks/infra/app1
           echo "Running plan in app1"
           terraform -chdir=stacks/infra/app1 init
           terraform -chdir=stacks/infra/app plan -out=app1-acceptance.tfplan -var-file=acceptance.tfvars
@@ -130,7 +129,7 @@ jobs:
         with:
           name: plan-files-app1
           path: |
-            stacks/app1/*tfplan
+            stacks/infra/app1/*tfplan
 
   plan_terraform_app2_acceptance:
     runs-on: ubuntu-latest
@@ -155,7 +154,7 @@ jobs:
         with:
           name: plan-files-app2
           path: |
-            stacks/app2/app2.tfplan
+            stacks/infra/app2/app2-acceptance.tfplan
 
   plan_terraform_app1_production:
     runs-on: ubuntu-latest
@@ -180,7 +179,7 @@ jobs:
         with:
           name: plan-files-app1
           path: |
-            stacks/app1/*tfplan
+            stacks/infra/app1/*tfplan
 
   plan_terraform_app2_production:
     runs-on: ubuntu-latest
@@ -198,11 +197,11 @@ jobs:
         run: |
           echo "Running plan in app2"
           terraform -chdir=stacks/infra/app2 init
-          terraform -chdir=stacks/infra/app2 plan -out=app2.tfplan -var-file=production.tfvars
+          terraform -chdir=stacks/infra/app2 plan -out=app2-production.tfplan -var-file=production.tfvars
 
       - name: Save Terraform plan as artifact file
         uses: actions/upload-artifact@v3
         with:
           name: plan-files-app2
           path: |
-            stacks/app2/app2-production.tfplan
+            stacks/infra/app2/app2-production.tfplan
