@@ -40,7 +40,7 @@ jobs:
               - './stacks/infra/app1/*tf'
               - './stacks/infra/app1/acceptance.tfvars'
             app1_production:
-              - *skeleton_acceptance
+              - *skeleton_production
               - './stacks/infra/app1/*tf'
               - './stacks/infra/app1/production.tfvars'
             app2_acceptance:
