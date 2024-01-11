@@ -83,7 +83,7 @@ jobs:
         with:
           name: plan-files-skeleton-acceptance
           path: |
-            stacks/skeleton/**/*tfplan
+            **/*tfplan
 
   apply_terraform_skeleton_acceptance:
     runs-on: ubuntu-latest
@@ -102,10 +102,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: plan-files-skeleton-acceptance
-
-      - name: move artifact back
-        run: |
-          cp base-networking.tfplan stacks/skeleton/base-networking/base-networking.tfplan
 
       - name: apply skeleton
         run: |
@@ -133,7 +129,7 @@ jobs:
         with:
           name: plan-files-skeleton-production
           path: |
-            stacks/skeleton/**/*tfplan
+            **/*tfplan
 
   apply_terraform_skeleton_production:
     runs-on: ubuntu-latest
@@ -152,10 +148,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: plan-files-skeleton-production
-
-      - name: move artifact back
-        run: |
-          cp base-networking.tfplan stacks/skeleton/base-networking/base-networking.tfplan
 
       - name: apply skeleton
         run: |
