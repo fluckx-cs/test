@@ -263,7 +263,7 @@ jobs:
 
       - name: move artifact back
         run: |
-          cp app1-acceptance.tfplan stacks/infra/app2/app2-acceptance.tfplan
+          cp app2-acceptance.tfplan stacks/infra/app2/app2-acceptance.tfplan
 
       - name: apply app2
         run: |
