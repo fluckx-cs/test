@@ -110,7 +110,7 @@ jobs:
       - name: apply skeleton
         run: |
           terraform -chdir=stacks/skeleton/base-networking init
-          terraform -chdir=stacks/skeleton/base-networking apply -var-file=acceptance.tfvars base-networking.tfplan
+          terraform -chdir=stacks/skeleton/base-networking apply base-networking.tfplan
 
   plan_terraform_skeleton_production:
     runs-on: ubuntu-latest
@@ -160,7 +160,7 @@ jobs:
       - name: apply skeleton
         run: |
           terraform -chdir=stacks/skeleton/base-networking init
-          terraform -chdir=stacks/skeleton/base-networking apply  -var-file=production.tfvars base-networking.tfplan
+          terraform -chdir=stacks/skeleton/base-networking apply base-networking.tfplan
 
 
   plan_terraform_app1_acceptance:
@@ -214,7 +214,7 @@ jobs:
       - name: apply app1
         run: |
           terraform -chdir=stacks/infra/app1 init
-          terraform -chdir=stacks/infra/app1 apply -var-file=production.tfvars app1-acceptance.tfplan
+          terraform -chdir=stacks/infra/app1 apply app1-acceptance.tfplan
 
 
   plan_terraform_app2_acceptance:
@@ -268,7 +268,7 @@ jobs:
       - name: apply app2
         run: |
           terraform -chdir=stacks/infra/app2 init
-          terraform -chdir=stacks/infra/app2 apply  -var-file=acceptance.tfvars app2-acceptance.tfplan
+          terraform -chdir=stacks/infra/app2 apply app2-acceptance.tfplan
 
   plan_terraform_app1_production:
     runs-on: ubuntu-latest
@@ -321,7 +321,7 @@ jobs:
       - name: apply app1
         run: |
           terraform -chdir=stacks/infra/app1 init
-          terraform -chdir=stacks/infra/app1 apply -var-file=production.tfvars app1-production.tfplan
+          terraform -chdir=stacks/infra/app1 apply app1-production.tfplan
 
   plan_terraform_app2_production:
     runs-on: ubuntu-latest
@@ -376,4 +376,4 @@ jobs:
       - name: apply app2
         run: |
           terraform -chdir=stacks/infra/app2 init
-          terraform -chdir=stacks/infra/app2 apply -var-file=production.tfvars app2-production.tfplan
+          terraform -chdir=stacks/infra/app2 apply app2-production.tfplan
