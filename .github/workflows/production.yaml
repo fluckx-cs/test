@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: check_for_changes
     environment: acceptance
-    if: ${{ always() && needs.check_for_changes.outputs.skeleton_acc_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.skeleton_acc_changed == 'true' }}
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -91,7 +91,7 @@ jobs:
       - check_for_changes
       - plan_terraform_skeleton_acceptance
     environment: acceptance
-    if: ${{ always() && needs.check_for_changes.outputs.skeleton_acc_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.skeleton_acc_changed == 'true' }}
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -103,7 +103,11 @@ jobs:
         with:
           name: plan-files-skeleton-acceptance
 
-      - name: plan skeleton
+      - name: move artifact back
+        run: |
+          cp base-networking.tfplan stacks/skeleton/base-networking/base-networking.tfplan
+
+      - name: apply skeleton
         run: |
           terraform -chdir=stacks/skeleton/base-networking init
           terraform -chdir=stacks/skeleton/base-networking apply -var-file=acceptance.tfvars base-networking.tfplan
@@ -112,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: check_for_changes
     environment: production
-    if: ${{ always() && needs.check_for_changes.outputs.skeleton_prd_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.skeleton_prd_changed == 'true' }}
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -137,7 +141,7 @@ jobs:
     - check_for_changes
     - plan_terraform_skeleton_production
     environment: production
-    if: ${{ always() && needs.check_for_changes.outputs.skeleton_prd_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.skeleton_prd_changed == 'true' }}
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -149,7 +153,11 @@ jobs:
         with:
           name: plan-files-skeleton-production
 
-      - name: plan skeleton
+      - name: move artifact back
+        run: |
+          cp base-networking.tfplan stacks/skeleton/base-networking/base-networking.tfplan
+
+      - name: apply skeleton
         run: |
           terraform -chdir=stacks/skeleton/base-networking init
           terraform -chdir=stacks/skeleton/base-networking apply  -var-file=production.tfvars base-networking.tfplan
@@ -158,7 +166,7 @@ jobs:
   plan_terraform_app1_acceptance:
     runs-on: ubuntu-latest
     environment: acceptance
-    if: ${{ always() && needs.check_for_changes.outputs.app1_acc_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.app1_acc_changed == 'true' }}
     needs:
       - check_for_changes
       - apply_terraform_skeleton_acceptance
@@ -187,7 +195,7 @@ jobs:
     - check_for_changes
     - plan_terraform_app1_acceptance
     environment: acceptance
-    if: ${{ always() && needs.check_for_changes.outputs.app1_acc_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.app1_acc_changed == 'true' }}
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -199,6 +207,10 @@ jobs:
         with:
           name: plan-files-app1-acceptance
 
+      - name: move artifact back
+        run: |
+          cp app1-acceptance.tfplan stacks/infra/app1/app1-acceptance.tfplan
+
       - name: apply app1
         run: |
           terraform -chdir=stacks/infra/app1 init
@@ -208,7 +220,7 @@ jobs:
   plan_terraform_app2_acceptance:
     runs-on: ubuntu-latest
     environment: acceptance
-    if: ${{ always() && needs.check_for_changes.outputs.app2_acc_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.app2_acc_changed == 'true' }}
     needs:
       - check_for_changes
       - apply_terraform_skeleton_acceptance
@@ -237,7 +249,7 @@ jobs:
       - check_for_changes
       - plan_terraform_app2_acceptance
     environment: acceptance
-    if: ${{ always() && needs.check_for_changes.outputs.app2_acc_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.app2_acc_changed == 'true' }}
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -248,7 +260,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: plan-files-app2-acceptance
-          rename: stacks/app2/app2-acceptance.tfplan
+
+      - name: move artifact back
+        run: |
+          cp app1-acceptance.tfplan stacks/infra/app2/app2-acceptance.tfplan
 
       - name: apply app2
         run: |
@@ -258,7 +273,7 @@ jobs:
   plan_terraform_app1_production:
     runs-on: ubuntu-latest
     environment: production
-    if: ${{ always() && needs.check_for_changes.outputs.app1_prd_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.app1_prd_changed == 'true' }}
     needs:
       - check_for_changes
       - apply_terraform_skeleton_production
@@ -287,7 +302,7 @@ jobs:
     - check_for_changes
     - plan_terraform_app1_production
     environment: acceptance
-    if: ${{ always() && needs.check_for_changes.outputs.app1_prd_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.app1_prd_changed == 'true' }}
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -299,6 +314,10 @@ jobs:
         with:
           name: plan-files-app1-production
 
+      - name: move artifact back
+        run: |
+          cp app1-production.tfplan stacks/infra/app1/app1-production.tfplan
+
       - name: apply app1
         run: |
           terraform -chdir=stacks/infra/app1 init
@@ -307,7 +326,7 @@ jobs:
   plan_terraform_app2_production:
     runs-on: ubuntu-latest
     environment: production
-    if: ${{ always() && needs.check_for_changes.outputs.app2_prd_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.app2_prd_changed == 'true' }}
     needs:
       - check_for_changes
       - apply_terraform_skeleton_production
@@ -337,7 +356,7 @@ jobs:
     - check_for_changes
     - plan_terraform_app2_production
     environment: acceptance
-    if: ${{ always() && needs.check_for_changes.outputs.app2_prd_changed == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.check_for_changes.outputs.app2_prd_changed == 'true' }}
     container:
       image: hashicorp/terraform:1.6
     steps:
@@ -349,6 +368,10 @@ jobs:
         with:
           name: plan-files-app2-production
           rename: stacks/app2/app2-production.tfplan
+
+      - name: move artifact back
+        run: |
+          cp app2-production.tfplan stacks/infra/app2/app2-production.tfplan
 
       - name: apply app2
         run: |
